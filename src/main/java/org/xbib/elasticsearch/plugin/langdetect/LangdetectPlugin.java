@@ -4,12 +4,15 @@ import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.cluster.metadata.IndexNameExpressionResolver;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
+import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.common.settings.ClusterSettings;
 import org.elasticsearch.common.settings.IndexScopedSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.SettingsFilter;
 import org.elasticsearch.index.mapper.Mapper;
+import org.elasticsearch.ingest.Processor;
 import org.elasticsearch.plugins.ActionPlugin;
+import org.elasticsearch.plugins.IngestPlugin;
 import org.elasticsearch.plugins.MapperPlugin;
 import org.elasticsearch.plugins.Plugin;
 import org.elasticsearch.rest.RestController;
@@ -17,6 +20,7 @@ import org.elasticsearch.rest.RestHandler;
 import org.xbib.elasticsearch.action.langdetect.LangdetectAction;
 import org.xbib.elasticsearch.action.langdetect.TransportLangdetectAction;
 import org.xbib.elasticsearch.index.mapper.langdetect.LangdetectMapper;
+import org.xbib.elasticsearch.ingest.processor.LangdetectProcessor;
 import org.xbib.elasticsearch.rest.action.langdetect.RestLangdetectAction;
 
 import java.util.ArrayList;
@@ -28,7 +32,7 @@ import java.util.function.Supplier;
 /**
  *
  */
-public class LangdetectPlugin extends Plugin implements MapperPlugin, ActionPlugin {
+public class LangdetectPlugin extends Plugin implements MapperPlugin, ActionPlugin, IngestPlugin {
 
     @Override
     public Map<String, Mapper.TypeParser> getMappers() {
@@ -55,5 +59,12 @@ public class LangdetectPlugin extends Plugin implements MapperPlugin, ActionPlug
         List<RestHandler> extra = new ArrayList<>();
         extra.add(new RestLangdetectAction(settings, restController));
         return extra;
+    }
+
+    @Override
+    public Map<String, Processor.Factory> getProcessors(Processor.Parameters parameters) {
+        return MapBuilder.<String, Processor.Factory>newMapBuilder()
+                .put(LangdetectProcessor.TYPE, new LangdetectProcessor.Factory())
+                .immutableMap();
     }
 }
